@@ -6,6 +6,12 @@ import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Optional
 import config
+import sys
+
+
+# Fix for Streamlit Cloud - use pysqlite3 instead of sqlite3
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 
 # Global client and collection instances

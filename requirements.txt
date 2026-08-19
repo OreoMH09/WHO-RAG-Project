@@ -4,9 +4,10 @@ lxml
 trafilatura
 langchain-text-splitters
 sentence-transformers
-chromadb
+chromadb==0.4.22
 rank_bm25
 streamlit
 python-dotenv
 groq
 tqdm
+pysqlite3-binary
