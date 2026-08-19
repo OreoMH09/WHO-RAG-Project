@@ -16,6 +16,7 @@ _collection = None
 def get_client():
     """
     Get or create the ChromaDB client (singleton pattern).
+    Supports both ChromaDB 0.3.x and 1.x versions.
     
     Returns:
         ChromaDB client
@@ -23,14 +24,27 @@ def get_client():
     global _client
     if _client is None:
         print(f"Initializing ChromaDB at: {config.CHROMA_DB_DIR}")
-        # ChromaDB 0.3.x uses Client, not PersistentClient
-        _client = chromadb.Client(
-            Settings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory=str(config.CHROMA_DB_DIR),
-                anonymized_telemetry=False,
+        
+        # Try ChromaDB 1.x first (PersistentClient)
+        try:
+            _client = chromadb.PersistentClient(
+                path=str(config.CHROMA_DB_DIR),
+                settings=Settings(
+                    anonymized_telemetry=False,
+                    allow_reset=True,
+                )
             )
-        )
+            print(f"Using ChromaDB {chromadb.__version__} with PersistentClient")
+        except AttributeError:
+            # Fall back to ChromaDB 0.3.x (Client with persist_directory)
+            _client = chromadb.Client(
+                Settings(
+                    chroma_db_impl="duckdb+parquet",
+                    persist_directory=str(config.CHROMA_DB_DIR),
+                    anonymized_telemetry=False,
+                )
+            )
+            print(f"Using ChromaDB {chromadb.__version__} with Client")
     return _client
 
 
