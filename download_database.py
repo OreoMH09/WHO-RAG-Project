@@ -11,11 +11,11 @@ from pathlib import Path
 
 # Configuration
 GITHUB_REPO = "OreoMH09/WHO-RAG-Project"
-RELEASE_TAG = "v1.0-database"
 DATABASE_ZIP = "chroma_db.zip"
 DATABASE_DIR = Path("data/chroma_db")
-# Use direct GitHub download URL (more reliable)
-DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/{DATABASE_ZIP}"
+
+# Download directly from main branch (more reliable than releases)
+DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/{DATABASE_ZIP}"
 
 # Export for use in other modules
 __all__ = ['setup_database', 'database_exists', 'DOWNLOAD_URL']
