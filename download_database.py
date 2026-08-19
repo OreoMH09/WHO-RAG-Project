@@ -14,6 +14,7 @@ GITHUB_REPO = "OreoMH09/WHO-RAG-Project"
 RELEASE_TAG = "v1.0-database"
 DATABASE_ZIP = "chroma_db.zip"
 DATABASE_DIR = Path("data/chroma_db")
+# Use direct GitHub download URL (more reliable)
 DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/{DATABASE_ZIP}"
 
 # Export for use in other modules
@@ -48,31 +49,57 @@ def download_database():
             percent = int(count * block_size * 100 / total_size)
             print(f"\rDownloading... {percent}%", end="", flush=True)
     
-    try:
-        # Add headers to avoid 403/404 errors
-        req = urllib.request.Request(DOWNLOAD_URL, headers={'User-Agent': 'Mozilla/5.0'})
-        
-        # Check if URL is accessible
-        with urllib.request.urlopen(req) as response:
-            total_size = int(response.headers.get('content-length', 0))
-            print(f"File size: {total_size / (1024*1024):.2f} MB")
-        
-        # Now download
-        urllib.request.urlretrieve(DOWNLOAD_URL, DATABASE_ZIP, reporthook)
-        print("\n✅ Download complete!")
-        return True
-    except urllib.error.HTTPError as e:
-        print(f"\n❌ HTTP Error {e.code}: {e.reason}")
-        print(f"URL: {DOWNLOAD_URL}")
-        print("💡 Make sure the release exists and the file is uploaded")
-        return False
-    except urllib.error.URLError as e:
-        print(f"\n❌ URL Error: {e.reason}")
-        print("💡 Check your internet connection")
-        return False
-    except Exception as e:
-        print(f"\n❌ Download failed: {e}")
-        return False
+    # Try multiple times with increasing timeout
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            print(f"\nAttempt {attempt + 1}/{max_retries}...")
+            
+            # Add headers and increase timeout
+            opener = urllib.request.build_opener()
+            opener.addheaders = [
+                ('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'),
+                ('Accept', '*/*')
+            ]
+            urllib.request.install_opener(opener)
+            
+            # Download with timeout
+            urllib.request.urlretrieve(DOWNLOAD_URL, DATABASE_ZIP, reporthook)
+            print("\n✅ Download complete!")
+            return True
+            
+        except urllib.error.HTTPError as e:
+            print(f"\n❌ HTTP Error {e.code}: {e.reason}")
+            if e.code == 404:
+                print(f"URL: {DOWNLOAD_URL}")
+                print("💡 File not found in release. Check if it's uploaded correctly.")
+                return False
+            elif e.code == 403:
+                print("💡 GitHub rate limit or access denied. Retrying...")
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(5)
+                    continue
+                return False
+        except urllib.error.URLError as e:
+            print(f"\n❌ URL Error: {e.reason}")
+            print("💡 Check your internet connection")
+            if attempt < max_retries - 1:
+                print("Retrying...")
+                import time
+                time.sleep(3)
+                continue
+            return False
+        except Exception as e:
+            print(f"\n❌ Download failed: {e}")
+            if attempt < max_retries - 1:
+                print("Retrying...")
+                import time
+                time.sleep(3)
+                continue
+            return False
+    
+    return False
 
 
 def extract_database():
