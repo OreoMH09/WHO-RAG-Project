@@ -1,0 +1,12 @@
+httpx
+beautifulsoup4
+lxml
+trafilatura
+langchain-text-splitters
+sentence-transformers
+chromadb
+rank_bm25
+streamlit
+python-dotenv
+groq
+tqdm
