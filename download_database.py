@@ -16,6 +16,9 @@ DATABASE_ZIP = "chroma_db.zip"
 DATABASE_DIR = Path("data/chroma_db")
 DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/{DATABASE_ZIP}"
 
+# Export for use in other modules
+__all__ = ['setup_database', 'database_exists', 'DOWNLOAD_URL']
+
 
 def database_exists():
     """Check if database already exists and is not empty."""
@@ -46,9 +49,27 @@ def download_database():
             print(f"\rDownloading... {percent}%", end="", flush=True)
     
     try:
+        # Add headers to avoid 403/404 errors
+        req = urllib.request.Request(DOWNLOAD_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        
+        # Check if URL is accessible
+        with urllib.request.urlopen(req) as response:
+            total_size = int(response.headers.get('content-length', 0))
+            print(f"File size: {total_size / (1024*1024):.2f} MB")
+        
+        # Now download
         urllib.request.urlretrieve(DOWNLOAD_URL, DATABASE_ZIP, reporthook)
         print("\n✅ Download complete!")
         return True
+    except urllib.error.HTTPError as e:
+        print(f"\n❌ HTTP Error {e.code}: {e.reason}")
+        print(f"URL: {DOWNLOAD_URL}")
+        print("💡 Make sure the release exists and the file is uploaded")
+        return False
+    except urllib.error.URLError as e:
+        print(f"\n❌ URL Error: {e.reason}")
+        print("💡 Check your internet connection")
+        return False
     except Exception as e:
         print(f"\n❌ Download failed: {e}")
         return False
