@@ -14,6 +14,21 @@ import config
 load_dotenv()
 
 
+# Auto-download database on first run (Streamlit Cloud)
+@st.cache_resource(show_spinner=False)
+def ensure_database_exists():
+    """Download database from GitHub Releases if not present."""
+    try:
+        from download_database import setup_database
+        setup_database()
+    except Exception as e:
+        print(f"Database setup: {e}")
+
+
+# Run database setup
+ensure_database_exists()
+
+
 # Page configuration
 st.set_page_config(
     page_title="WHO Health Information Assistant",
