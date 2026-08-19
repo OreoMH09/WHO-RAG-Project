@@ -26,20 +26,30 @@ st.set_page_config(
 def check_setup():
     """Check if the system is properly set up."""
     errors = []
+    warnings = []
     
-    # Check API key
-    if not os.getenv("GROQ_API_KEY"):
-        errors.append("❌ GROQ_API_KEY not found. Please create a .env file with your API key.")
+    # Check API key - try both .env and Streamlit secrets
+    api_key = None
+    try:
+        api_key = st.secrets.get("GROQ_API_KEY")
+    except:
+        api_key = os.getenv("GROQ_API_KEY")
+    
+    if not api_key:
+        errors.append("❌ GROQ_API_KEY not found. Please add it to Streamlit secrets or .env file.")
     
     # Check if index exists
     try:
         stats = get_collection_stats()
         if stats["total_documents"] == 0:
-            errors.append("❌ No documents in the index. Please run: python -m ingestion.build_index sample 10")
+            warnings.append({
+                "message": "⚠️ No documents in the index yet.",
+                "action": "build_index"
+            })
     except Exception as e:
         errors.append(f"❌ Error accessing vector database: {e}")
     
-    return errors
+    return errors, warnings
 
 
 def display_source(source, index):
@@ -61,23 +71,42 @@ def main():
     """)
     
     # Check setup
-    setup_errors = check_setup()
+    setup_errors, warnings = check_setup()
+    
     if setup_errors:
         st.error("**Setup Issues:**")
         for error in setup_errors:
             st.write(error)
         st.info("""
         **Setup Instructions:**
-        1. Create a `.env` file with your Groq API key:
-           ```
-           GROQ_API_KEY=gsk_xxxx
-           ```
-        2. Build the document index:
-           ```
-           python -m ingestion.build_index sample 10
-           ```
+        1. Add GROQ_API_KEY to Streamlit Secrets (for cloud) or .env file (for local)
+        2. Build the document index (see below)
         """)
         return
+    
+    # Show warnings (non-blocking)
+    if warnings:
+        for warning in warnings:
+            if warning["action"] == "build_index":
+                st.warning(warning["message"])
+                st.info("""
+                **How to build the index:**
+                
+                The vector database is empty. You have two options:
+                
+                **Option 1: Build locally (Recommended)**
+                ```bash
+                # On your computer:
+                python -m ingestion.build_index sample 10
+                ```
+                Then push `data/` folder to cloud storage or re-deploy with the database.
+                
+                **Option 2: Use without index (Demo mode)**
+                This app will show a demo message explaining that indexing is needed.
+                Real deployment would need the database uploaded separately.
+                """)
+                
+                # Don't return - let them see the UI
     
     # Sidebar configuration
     with st.sidebar:
