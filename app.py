@@ -94,16 +94,33 @@ def main():
                 
                 The vector database is empty. You have two options:
                 
-                **Option 1: Build locally (Recommended)**
+                **Option 1: Auto-build sample index (10 pages)**
+                """)
+                
+                if st.button("🔨 Build Sample Index Now (10 pages, ~2 min)", type="primary"):
+                    with st.spinner("Building index... This will take ~2 minutes"):
+                        try:
+                            from ingestion.build_index import main as build_index
+                            import sys
+                            # Temporarily redirect stdout
+                            old_argv = sys.argv
+                            sys.argv = ['build_index', 'sample', '10']
+                            build_index()
+                            sys.argv = old_argv
+                            st.success("✅ Index built successfully! Refresh the page.")
+                            st.balloons()
+                        except Exception as e:
+                            st.error(f"Error building index: {e}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                
+                st.info("""
+                **Option 2: Build locally (Full index - 1,074 documents)**
                 ```bash
                 # On your computer:
-                python -m ingestion.build_index sample 10
+                python -m ingestion.build_index full
                 ```
-                Then push `data/` folder to cloud storage or re-deploy with the database.
-                
-                **Option 2: Use without index (Demo mode)**
-                This app will show a demo message explaining that indexing is needed.
-                Real deployment would need the database uploaded separately.
+                Then upload the `data/chroma_db/` folder to cloud storage.
                 """)
                 
                 # Don't return - let them see the UI
