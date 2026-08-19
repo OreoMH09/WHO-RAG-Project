@@ -22,9 +22,14 @@ def database_exists():
     if not DATABASE_DIR.exists():
         return False
     
-    # Check if there are any files in the database directory
-    parquet_files = list(DATABASE_DIR.rglob("*.parquet"))
-    return len(parquet_files) > 0
+    # Check if there are database files (chroma.sqlite3 or any db files)
+    sqlite_file = DATABASE_DIR / "chroma.sqlite3"
+    if sqlite_file.exists():
+        return True
+    
+    # Also check for any files in subdirectories
+    all_files = list(DATABASE_DIR.rglob("*.*"))
+    return len(all_files) > 0
 
 
 def download_database():
@@ -83,13 +88,19 @@ def setup_database():
     # Check if database already exists
     if database_exists():
         print("✅ Database already exists. Skipping download.")
+        # Count files for verification
+        all_files = list(DATABASE_DIR.rglob("*.*"))
+        print(f"📊 Found {len(all_files)} files in database")
         return True
     
     print("⚠️ Database not found. Starting download...")
+    print(f"📍 Download URL: {DOWNLOAD_URL}")
+    print(f"📁 Target directory: {DATABASE_DIR}")
     
     # Download
     if not download_database():
         print("❌ Failed to download database")
+        print("💡 Check if the release exists: https://github.com/OreoMH09/WHO-RAG-Project/releases/tag/v1.0-database")
         return False
     
     # Extract
@@ -102,10 +113,13 @@ def setup_database():
         print("=" * 80)
         print("✅ DATABASE SETUP COMPLETE!")
         print(f"📊 Database location: {DATABASE_DIR.absolute()}")
+        all_files = list(DATABASE_DIR.rglob("*.*"))
+        print(f"📊 Total files: {len(all_files)}")
         print("=" * 80)
         return True
     else:
         print("❌ Database setup failed - files not found after extraction")
+        print(f"📁 Checking what's in data/: {list(Path('data').iterdir())}")
         return False
 
 
