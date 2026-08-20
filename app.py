@@ -15,7 +15,7 @@ load_dotenv()
 
 
 # Auto-download database on first run (Streamlit Cloud)
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False, ttl=60)  # Cache for 60 seconds only
 def ensure_database_exists():
     """Download database from GitHub Releases if not present."""
     from download_database import database_exists, DOWNLOAD_URL
@@ -34,7 +34,7 @@ def ensure_database_exists():
                 return True
             else:
                 st.error(f"❌ Database download failed. Please check the logs or click 'Build Sample Index' button below.")
-                st.info(f"💡 Release URL: {DOWNLOAD_URL}")
+                st.info(f"💡 Download URL: {DOWNLOAD_URL}")
                 return False
         except Exception as e:
             st.error(f"❌ Database setup error: {e}")
@@ -44,7 +44,7 @@ def ensure_database_exists():
             return False
 
 
-# Run database setup
+# Run database setup (version 2 - cache busting)
 ensure_database_exists()
 
 
