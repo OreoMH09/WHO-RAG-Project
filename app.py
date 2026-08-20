@@ -209,6 +209,10 @@ def main():
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
+    # Initialize pending question state
+    if "pending_question" not in st.session_state:
+        st.session_state.pending_question = None
+    
     # Display conversation history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -222,6 +226,11 @@ def main():
     
     # Question input
     question = st.chat_input("Ask a health question...")
+    
+    # Check for pending question from example buttons
+    if st.session_state.pending_question:
+        question = st.session_state.pending_question
+        st.session_state.pending_question = None
     
     if question:
         # Display user question
@@ -308,6 +317,8 @@ def main():
         for col, question in zip(cols, example_questions):
             with col:
                 if st.button(question, use_container_width=True):
+                    # Set pending question and trigger rerun to process it
+                    st.session_state.pending_question = question
                     st.rerun()
 
 
