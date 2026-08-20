@@ -7,10 +7,10 @@ __pycache__/
 *.pyd
 .Python
 
-# Data directories
+# Data directories (keeping database for deployment)
 data/raw_html/
 data/clean_text/
-data/chroma_db/
+# data/chroma_db/  <- COMMENTED OUT to allow pushing database
 
 # IDE
 .vscode/

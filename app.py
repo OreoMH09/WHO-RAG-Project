@@ -14,38 +14,7 @@ import config
 load_dotenv()
 
 
-# Auto-download database on first run (Streamlit Cloud)
-@st.cache_resource(show_spinner=False, ttl=60)  # Cache for 60 seconds only
-def ensure_database_exists():
-    """Download database from GitHub Releases if not present."""
-    from download_database import database_exists, DOWNLOAD_URL
-    
-    # Check if database already exists
-    if database_exists():
-        return True
-    
-    # Show download UI
-    with st.spinner("📥 Downloading WHO database (12 MB)... This may take 2-3 minutes on first load."):
-        try:
-            from download_database import setup_database
-            success = setup_database()
-            if success:
-                st.success("✅ Database downloaded successfully! Refreshing...")
-                return True
-            else:
-                st.error(f"❌ Database download failed. Please check the logs or click 'Build Sample Index' button below.")
-                st.info(f"💡 Download URL: {DOWNLOAD_URL}")
-                return False
-        except Exception as e:
-            st.error(f"❌ Database setup error: {e}")
-            st.info("💡 You can build a sample index instead using the button below.")
-            import traceback
-            st.code(traceback.format_exc())
-            return False
-
-
-# Run database setup (version 2 - cache busting)
-ensure_database_exists()
+# No need to download - database is now in the repo!
 
 
 # Page configuration
