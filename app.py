@@ -134,13 +134,16 @@ def main():
                 if st.button("🔨 Build Sample Index Now (10 pages, ~2 min)", type="primary"):
                     with st.spinner("Building index... This will take ~2 minutes"):
                         try:
-                            from ingestion.build_index import main as build_index
-                            import sys
-                            # Temporarily redirect stdout
-                            old_argv = sys.argv
-                            sys.argv = ['build_index', 'sample', '10']
-                            build_index()
-                            sys.argv = old_argv
+                            import asyncio
+                            from ingestion.build_index import build_index_from_scratch
+                            
+                            # Run the async function
+                            asyncio.run(build_index_from_scratch(
+                                reset_collection=True,
+                                sample_size=10,
+                                use_cache=False  # Don't use cache for fresh build
+                            ))
+                            
                             st.success("✅ Index built successfully! Refresh the page.")
                             st.balloons()
                         except Exception as e:
